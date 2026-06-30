@@ -1,0 +1,26 @@
+# SAS generated datasets
+*.sas7bdat
+*.sas7bndx
+*.lck
+
+# SAS logs/results
+*.log
+*.lst
+*.html
+
+# Transport/source/reference data
+rawdata/
+reference/
+*.xpt
+*.xml
+
+# ZIP packages
+*.zip
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Temporary files
+~*
+*.tmp
