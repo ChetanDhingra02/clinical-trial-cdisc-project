@@ -480,12 +480,10 @@ flowchart LR
 
 ## Author
 
-**Chetan Dhingra**, Statistical / Clinical SAS Programmer
+**Chetan Dhingra**, MSc Data. Modelling and Predictions, University of Alberta
 
 <p>
-  <a href="#"><img alt="LinkedIn" src="https://img.shields.io/badge/LinkedIn-Connect-0a66c2?logo=linkedin&logoColor=white"></a>
-  <a href="#"><img alt="Email" src="https://img.shields.io/badge/Email-Contact-d14836?logo=gmail&logoColor=white"></a>
-  <a href="#"><img alt="Portfolio" src="https://img.shields.io/badge/Portfolio-Visit-2f9e44"></a>
+  <a href="https://www.linkedin.com/in/chetan-dhingra/"><img alt="LinkedIn" src="https://img.shields.io/badge/LinkedIn-Connect-0a66c2?logo=linkedin&logoColor=white"></a>
 </p>
 
 ---
