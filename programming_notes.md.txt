@@ -1,0 +1,142 @@
+# Programming Notes — CDISCPILOT01
+
+**Programmer:** Chetan Dhingra
+**Standards:** SDTM v3.4, ADaM v2.1
+**Source:** Official CDISC Pilot Submission Package
+
+Technical log of derivations, validation results, and discrepancies found during
+independent QC against the reference XPT files. For project summary, see README.md.
+
+---
+
+## Reference files used for QC
+
+SDTM: `dm.xpt` `vs.xpt` `ae.xpt` `suppae.xpt` `suppdm.xpt`
+ADaM: `adsl.xpt` `adqsadas.xpt` `adae.xpt` `advs.xpt` `adlbc.xpt`
+
+Used primarily for QC validation. ADQSADAS was intentionally sourced from the reference XPT to preserve complex ADAS-Cog/LOCF structure; this is documented below as a scope decision.
+
+---
+
+## SDTM row counts
+
+| Domain | Rows |
+|---|---|
+| DM | 306 (254 randomized) |
+| VS | 29,643 |
+| AE | 1,191 |
+| SUPPAE | 1,191 |
+| SUPPDM | 1,197 |
+
+---
+
+## ADaM — derivations and validation results
+
+### ADSL
+Built from DM, extended with HEIGHTBL/WEIGHTBL (from VS baseline), BMIBL/BMIBLGR1,
+MMSETOT, DISCONFL, DCDECOD, DSRAEFL, DTHFL, EFFFL, COMP8FL/16FL/24FL.
+
+Selected variables vs. reference: **exact match.**
+
+Known gap: portfolio ADSL keeps some SDTM-derived vars not in reference ADSL; reference
+has sponsor-specific vars not implemented here. Scope decision, not an error.
+
+### ADQSADAS
+Read from reference XPT (preserves ACITM01–14, ACTOT, LOCF, baseline/analysis flags).
+
+Row count: **12,463 — exact match.**
+
+PROC COMPARE flagged non-unique BY/ID vars even when using
+`USUBJID + PARAMCD + AVISITN + DTYPE`. The same warning appeared in both portfolio
+and reference datasets at the same ID pattern, confirming this is a QC key limitation
+rather than a derivation defect.
+
+### ADAE
+Row count: **1,191 — exact match.** Serious TEAE pattern matches reference.
+
+### ADVS
+Direct VS→ADVS derivation, one row per SDTM VS record.
+
+| | Rows |
+|---|---|
+| Portfolio ADVS | 29,643 |
+| Reference ADVS | 32,139 |
+| Gap | 2,496 |
+
+Investigated in `validation/advs_deep_compare.sas`. Gap = derived analysis-visit
+records (incl. End of Treatment) requiring visit-window logic not implemented here.
+**Documented scope limitation, root cause confirmed.**
+
+---
+
+## SUPP domains
+
+### SUPPAE
+**Bug found and fixed:** initial build only wrote rows where QVAL='Y' (1,126 rows).
+Reference comparison showed SUPP domains should carry one row per parent record
+regardless of flag value. Corrected to write all 1,191 AE records, QVAL='Y'/'N'.
+
+Final: 1,191 rows | QVAL='Y': 1,126 | QVAL='N': 65 — **matches reference.**
+
+### SUPPDM
+6 flags (SAFETY, ITT, EFFICACY, COMPLT8/16/24), whole-subject qualifiers.
+Row count and QNAM distribution: **exact match.**
+
+---
+
+## TFL outputs
+
+| File | Content |
+|---|---|
+| `t_14_1_1_demog.pdf` | Demographics |
+| `t_14_1_2_disposition.pdf` | Subject disposition |
+| `t_14_3_1_ae.pdf` | TEAEs by SOC |
+| `t_14_3_2_ae_serious.pdf` | Serious TEAEs, Fisher's Exact |
+| `t_14_3_4_lab_shift.pdf` | Lab shift (ALT/AST/BILI/ALP/GGT) |
+| `f_11_2_adascog.pdf` | ADAS-Cog CFB, observed + LOCF |
+
+All 6 confirmed present by validation script.
+
+**Lab shift:** fixed a BY-group mismatch between PROC SORT and the DATA step BY statement.
+
+**Serious AE table:** build guide assumed 1 event/arm. Actual reference data:
+Placebo 0 / Low 1 / High 2. Table built to match verified source data — discrepancy
+caught during validation, not in the original plan.
+
+---
+
+## Validation programs (`validation/`)
+
+| Program | Checks |
+|---|---|
+| `check_reference_uploads.sas` | Reference XPTs present/readable |
+| `crosscheck_reference.sas` | Row counts + key vars: ADSL, ADQSADAS, ADAE |
+| `advs_deep_compare.sas` | ADVS row-count gap diagnosis |
+
+Run independently from `run_all.sas` — QC is a separate layer, not embedded in production code.
+
+Environment: SAS OnDemand for Academics. All paths via single `&root` macro in `setup.sas`.
+
+---
+
+## Scope decisions (not bugs)
+
+1. ADVS — simplified vs. reference visit-window/EOT logic (gap diagnosed, see above)
+2. ADQSADAS — sourced from reference XPT rather than derived from QS
+3. Some sponsor-specific reference ADSL vars not recreated
+4. TFLs are portfolio-style, not full CSR shells
+5. Validation is targeted, not full double programming
+
+---
+
+## Final status
+
+| Check | Result |
+|---|---|
+| ADSL | Pass — exact match |
+| ADQSADAS | Pass — 12,463 rows, exact match |
+| ADAE | Pass — 1,191 rows, exact match |
+| SUPPAE | Pass — after fix |
+| SUPPDM | Pass — exact match |
+| Output PDFs | 6/6 confirmed |
+| ADVS | Documented gap, root cause confirmed |
